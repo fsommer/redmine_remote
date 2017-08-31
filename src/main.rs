@@ -1,55 +1,67 @@
-extern crate docopt;
+extern crate clap;
 extern crate redmine_api;
-extern crate rustc_serialize;
 
-use docopt::Docopt;
+use clap::{Arg, App, SubCommand};
 use redmine_api::RedmineApi;
 use redmine_api::time_entries::TimeEntry;
 
-const USAGE: &'static str = "
-Redmine Remote.
-
-Usage:
-  rr time-entries create --host=<host> --apikey=<apikey> <issue-id> <hours> <activity-id> <comments>
-  rr (-h | --help)
-
-Options:
-  -h --help          Show this screen.
-  --host=<host>      Redmine host.
-  --apikey=<apikey>  Redmine API key.
-";
-
-#[derive(Debug, RustcDecodable)]
-struct Args {
-    cmd_time_entries: bool,
-    cmd_create: bool,
-    flag_host: String,
-    flag_apikey: String,
-    arg_issue_id: u32,
-    arg_hours: f32,
-    arg_activity_id: u8,
-    arg_comments: String,
-}
-
 fn main() {
-    let args: Args = Docopt::new(USAGE)
-                            .and_then(|d| d.decode())
-                            .unwrap_or_else(|e| e.exit());
-    //println!("{:?}", args);
+    let matches = App::new("Redmine Remote")
+        .version("0.0.1")
+        .author("Florian Sommer <fsommer1986@gmail.com>")
+        .about("Command line program for using the redmine api (see http://www.redmine.org/).")
+        .arg(Arg::with_name("host")
+             .long("host")
+             .takes_value(true)
+             .required(true))
+        .arg(Arg::with_name("apikey")
+             .long("apikey")
+             .takes_value(true)
+             .required(true))
+        .subcommand(SubCommand::with_name("time_entries")
+                    .about("Handles the time entries sub api.")
+                    .subcommand(SubCommand::with_name("create")
+                                .about("Creates new time entry.")
+                                .arg(Arg::with_name("issue-id")
+                                     .required(true))
+                                .arg(Arg::with_name("hours")
+                                     .required(true))
+                                .arg(Arg::with_name("activity-id")
+                                     .required(true))
+                                .arg(Arg::with_name("comments")
+                                     .required(true))))
+        .get_matches();
+
+    let host = matches.value_of("host").unwrap();
+    let apikey = matches.value_of("apikey").unwrap();
 
     let redmine = RedmineApi::new(
     //    "http://localhost:10083".to_string(),
     //    "9d61c6c2696289c545673daad62272a3ea91f3ef".to_string(),
-        args.flag_host,
-        args.flag_apikey,
+        host.to_string(),
+        apikey.to_string(),
     );
 
-    let time_entry = TimeEntry {
-        issue_id: args.arg_issue_id,
-        hours: args.arg_hours,
-        activity_id: args.arg_activity_id,
-        comments: args.arg_comments,
-    };
+    if let Some(matches) = matches.subcommand_matches("time_entries") {
+        if let Some(matches) = matches.subcommand_matches("create") {
+            let issue_id = matches.value_of("issue-id").unwrap();
+            let hours = matches.value_of("hours").unwrap();
+            let activity_id = matches.value_of("activity-id").unwrap();
+            let comments = matches.value_of("comments").unwrap();
 
-    redmine.time_entries().create(&time_entry);
+            let time_entry = TimeEntry {
+                issue_id: issue_id.parse::<u32>().unwrap(),
+                hours: hours.parse::<f32>().unwrap(),
+                activity_id: activity_id.parse::<u8>().unwrap(),
+                comments: comments.to_string(),
+            };
+
+            let result = redmine.time_entries().create(&time_entry);
+            println!("Result: {:?}", result);
+        } else {
+        println!("nothing here yet");
+    }
+    } else {
+        println!("nothing here yet");
+    }
 }

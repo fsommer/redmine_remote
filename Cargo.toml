@@ -7,8 +7,7 @@ authors = ["Florian Sommer <fsommer1986@gmail.com>"]
 name = "rr"
 
 [dependencies]
-docopt = "0.6"
-rustc-serialize = "0.3"
+clap = "2"
 
 [dependencies.redmine_api]
 path = "../redmine_api"
