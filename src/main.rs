@@ -51,5 +51,5 @@ fn main() {
         comments: args.arg_comments,
     };
 
-    redmine.time_entries.create(&time_entry);
+    redmine.time_entries().create(&time_entry);
 }
