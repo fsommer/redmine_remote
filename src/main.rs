@@ -36,8 +36,6 @@ fn main() {
     let apikey = matches.value_of("apikey").unwrap();
 
     let redmine = RedmineApi::new(
-    //    "http://localhost:10083".to_string(),
-    //    "9d61c6c2696289c545673daad62272a3ea91f3ef".to_string(),
         host.to_string(),
         apikey.to_string(),
     );
