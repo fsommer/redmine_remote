@@ -5,6 +5,7 @@ authors = ["Florian Sommer <fsommer1986@gmail.com>"]
 
 [[bin]]
 name = "rr"
+path = "src/main.rs"
 
 [dependencies]
 clap = "2"
