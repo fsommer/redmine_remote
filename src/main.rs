@@ -1,11 +1,41 @@
 extern crate clap;
+extern crate config;
 extern crate redmine_api;
+extern crate serde;
+
+#[macro_use]
+extern crate serde_derive;
+
+mod settings;
 
 use clap::{Arg, App, SubCommand};
 use redmine_api::RedmineApi;
 use redmine_api::time_entries::TimeEntry;
+use settings::Settings;
 
 fn main() {
+    let mut needs_host_parameter = true;
+    let mut needs_apikey_parameter = true;
+
+    let mut settings = match Settings::new() {
+        Ok(s) => {
+            needs_host_parameter = match s.host {
+                Some(_) => false,
+                _ => true,
+            };
+            needs_apikey_parameter = match s.apikey {
+                Some(_) => false,
+                _ => true,
+            };
+
+            s
+        },
+        _ => Settings {
+            ..Default::default()
+        },
+    };
+
+
     let matches = App::new("Redmine Remote")
         .version("0.0.1")
         .author("Florian Sommer <fsommer1986@gmail.com>")
@@ -13,11 +43,11 @@ fn main() {
         .arg(Arg::with_name("host")
              .long("host")
              .takes_value(true)
-             .required(true))
+             .required(needs_host_parameter))
         .arg(Arg::with_name("apikey")
              .long("apikey")
              .takes_value(true)
-             .required(true))
+             .required(needs_apikey_parameter))
         .subcommand(SubCommand::with_name("issues")
                     .about("Handles the issues sub api.")
                     .subcommand(SubCommand::with_name("create")
@@ -62,12 +92,16 @@ fn main() {
                                      .required(true))))
         .get_matches();
 
-    let host = matches.value_of("host").unwrap();
-    let apikey = matches.value_of("apikey").unwrap();
+    if let Some(h) = matches.value_of("host") {
+        settings.host = Some(h.to_string());
+    }
+    if let Some(ak) = matches.value_of("apikey") {
+        settings.apikey = Some(ak.to_string());
+    };
 
     let redmine = RedmineApi::new(
-        host.to_string(),
-        apikey.to_string(),
+        settings.host.unwrap(),
+        settings.apikey.unwrap(),
     );
 
     match matches.subcommand() {
