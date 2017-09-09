@@ -4,7 +4,7 @@ extern crate clap;
 extern crate config;
 extern crate redmine_api;
 
-mod arguments;
+mod args;
 mod errors;
 mod issues;
 mod settings;
@@ -19,30 +19,30 @@ quick_main!(run);
 
 fn run() -> Result<i32> {
     let settings = Settings::new()?;
-    let matches = arguments::get_matches();
+    let args = args::get_matches();
 
-    let (host, apikey) = get_host_and_apikey(&settings, &matches)?;
+    let (host, apikey) = get_host_and_apikey(&settings, &args)?;
     let redmine = RedmineApi::new(host, apikey);
 
-    match matches.subcommand() {
-        ("issues", Some(matches)) => match matches.subcommand() {
-            ("list", Some(matches)) => { issues::list(&redmine, &matches)?; },
-            ("create", Some(matches)) => { issues::create(&redmine, &matches)?; },
-            _ => println!("{}", matches.usage()),
+    match args.subcommand() {
+        ("issues", Some(args)) => match args.subcommand() {
+            ("list", Some(args)) => { issues::list(&redmine, &args)?; },
+            ("create", Some(args)) => { issues::create(&redmine, &args)?; },
+            _ => println!("{}", args.usage()),
         },
-        ("time_entries", Some(matches)) => match matches.subcommand() {
-            ("create", Some(matches)) => { time_entries::create(&redmine, &matches)?; },
-            _ => println!("{}", matches.usage()),
+        ("time_entries", Some(args)) => match args.subcommand() {
+            ("create", Some(args)) => { time_entries::create(&redmine, &args)?; },
+            _ => println!("{}", args.usage()),
         },
-        _ => println!("{}", matches.usage()),
+        _ => println!("{}", args.usage()),
     };
 
     Ok(0)
 }
 
-fn get_host_and_apikey(settings: &Settings, matches: &ArgMatches) -> Result<(String, String)> {
+fn get_host_and_apikey(settings: &Settings, args: &ArgMatches) -> Result<(String, String)> {
     let host: String;
-    if let Some(ref h) = matches.value_of("host") {
+    if let Some(ref h) = args.value_of("host") {
         host = h.to_string();
     } else if let Some(ref h) = settings.host {
         host = h.to_string();
@@ -51,7 +51,7 @@ fn get_host_and_apikey(settings: &Settings, matches: &ArgMatches) -> Result<(Str
     }
 
     let apikey: String;
-    if let Some(ref ak) = matches.value_of("apikey") {
+    if let Some(ref ak) = args.value_of("apikey") {
         apikey = ak.to_string();
     } else if let Some(ref ak) = settings.apikey {
         apikey = ak.to_string();
