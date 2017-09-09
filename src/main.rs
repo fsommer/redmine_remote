@@ -32,23 +32,23 @@ fn run() -> Result<()> {
 }
 
 fn get_host_and_apikey(settings: &Settings, args: &ArgMatches) -> Result<(String, String)> {
-    let host: String;
+    let host: &str;
     if let Some(ref h) = args.value_of("host") {
-        host = h.to_string();
+        host = h;
     } else if let Some(ref h) = settings.host {
-        host = h.to_string();
+        host = h;
     } else {
         bail!("host is missing");
     }
 
-    let apikey: String;
+    let apikey: &str;
     if let Some(ref ak) = args.value_of("apikey") {
-        apikey = ak.to_string();
+        apikey = ak;
     } else if let Some(ref ak) = settings.apikey {
-        apikey = ak.to_string();
+        apikey = ak;
     } else {
         bail!("apikey is missing");
     }
 
-    Ok((host, apikey))
+    Ok((host.to_string(), apikey.to_string()))
 }
