@@ -27,28 +27,7 @@ fn run() -> Result<i32> {
     match matches.subcommand() {
         ("issues", Some(matches)) => match matches.subcommand() {
             ("list", Some(matches)) => { issues::list(&redmine, &matches)?; },
-            ("create", Some(matches)) => {
-                let mut watcher_user_ids = Vec::new();
-                watcher_user_ids.push(matches.value_of("watcher-user-ids").unwrap().parse::<u32>().unwrap());
-
-                let result = redmine.issues().create(
-                        matches.value_of("project-id").unwrap().parse::<u32>().unwrap(),
-                        matches.value_of("tracker-id").unwrap().parse::<u32>().unwrap(),
-                        matches.value_of("status-id").unwrap().parse::<u32>().unwrap(),
-                        matches.value_of("priority-id").unwrap().parse::<u32>().unwrap(),
-                        matches.value_of("subject").unwrap()
-                    )
-                    .description(matches.value_of("description").unwrap())
-                    .category_id(matches.value_of("category-id").unwrap().parse::<u32>().unwrap())
-                    .fixed_version_id(matches.value_of("version-id").unwrap().parse::<u32>().unwrap())
-                    .assigned_to_id(matches.value_of("assigned-to-id").unwrap().parse::<u32>().unwrap())
-                    .parent_issue_id(matches.value_of("parent-issue-id").unwrap().parse::<u32>().unwrap())
-                    .watcher_user_ids(watcher_user_ids)
-                    .is_private(matches.value_of("is-private").unwrap().parse::<bool>().unwrap())
-                    .estimated_hours(matches.value_of("estimated-hours").unwrap().parse::<f32>().unwrap())
-                    .execute();
-                println!("Result: {:?}", result);
-            },
+            ("create", Some(matches)) => { issues::create(&redmine, &matches)?; },
             _ => println!("nothing here yet"),
         },
         ("time_entries", Some(matches)) => match matches.subcommand() {
