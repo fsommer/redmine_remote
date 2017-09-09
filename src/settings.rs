@@ -1,4 +1,5 @@
-use config::{Config, ConfigError, Environment, File, FileFormat};
+use config::{Config, Environment, File, FileFormat};
+use errors::*;
 
 #[derive(Debug, Default, Deserialize)]
 pub struct Settings {
@@ -6,7 +7,7 @@ pub struct Settings {
     pub apikey: Option<String>,
 }
 impl Settings {
-    pub fn new() -> Result<Self, ConfigError> {
+    pub fn new() -> Result<Self> {
         let mut s = Config::new();
 
         // read config file in local directory
@@ -17,6 +18,6 @@ impl Settings {
         // add in settings from environment (with prefix "RR")
         s.merge(Environment::with_prefix("rr"))?;
 
-        s.try_into()
+        s.try_into().chain_err(|| "Can't create settings from configuration")
     }
 }
