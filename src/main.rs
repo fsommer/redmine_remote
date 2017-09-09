@@ -25,6 +25,12 @@ fn run() -> Result<i32> {
 
     match matches.subcommand() {
         ("issues", Some(matches)) => match matches.subcommand() {
+            ("list", Some(matches)) => {
+                let result = redmine.issues().list().execute()?;
+                for i in result {
+                    println!("(#{}) {}", i.id, i.subject);
+                }
+            },
             ("create", Some(matches)) => {
                 let mut watcher_user_ids = Vec::new();
                 watcher_user_ids.push(matches.value_of("watcher-user-ids").unwrap().parse::<u32>().unwrap());

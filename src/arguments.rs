@@ -13,6 +13,8 @@ pub fn get_matches<'a>() -> ArgMatches<'a> {
              .takes_value(true))
         .subcommand(SubCommand::with_name("issues")
                     .about("Handles the issues sub api.")
+                    .subcommand(SubCommand::with_name("list")
+                                .about("List issues."))
                     .subcommand(SubCommand::with_name("create")
                                 .about("Creates new issue.")
                                 .arg(Arg::with_name("project-id")
