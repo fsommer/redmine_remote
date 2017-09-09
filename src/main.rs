@@ -28,13 +28,13 @@ fn run() -> Result<i32> {
         ("issues", Some(matches)) => match matches.subcommand() {
             ("list", Some(matches)) => { issues::list(&redmine, &matches)?; },
             ("create", Some(matches)) => { issues::create(&redmine, &matches)?; },
-            _ => println!("nothing here yet"),
+            _ => println!("{}", matches.usage()),
         },
         ("time_entries", Some(matches)) => match matches.subcommand() {
             ("create", Some(matches)) => { time_entries::create(&redmine, &matches)?; },
-            _ => println!("nothing here yet"),
+            _ => println!("{}", matches.usage()),
         },
-        _ => println!("nothing here yet"),
+        _ => println!("{}", matches.usage()),
     };
 
     Ok(0)
