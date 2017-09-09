@@ -6,98 +6,27 @@ extern crate serde;
 #[macro_use]
 extern crate serde_derive;
 
+mod arguments;
 mod settings;
 
-use clap::{Arg, App, SubCommand};
 use redmine_api::RedmineApi;
 use redmine_api::time_entries::TimeEntry;
 use settings::Settings;
 
 fn main() {
-    let mut needs_host_parameter = true;
-    let mut needs_apikey_parameter = true;
-
-    let mut settings = match Settings::new() {
-        Ok(s) => {
-            needs_host_parameter = match s.host {
-                Some(_) => false,
-                _ => true,
-            };
-            needs_apikey_parameter = match s.apikey {
-                Some(_) => false,
-                _ => true,
-            };
-
-            s
-        },
-        _ => Settings {
-            ..Default::default()
-        },
-    };
-
-
-    let matches = App::new("Redmine Remote")
-        .version("0.0.1")
-        .author("Florian Sommer <fsommer1986@gmail.com>")
-        .about("Command line program for using the redmine api (see http://www.redmine.org/).")
-        .arg(Arg::with_name("host")
-             .long("host")
-             .takes_value(true)
-             .required(needs_host_parameter))
-        .arg(Arg::with_name("apikey")
-             .long("apikey")
-             .takes_value(true)
-             .required(needs_apikey_parameter))
-        .subcommand(SubCommand::with_name("issues")
-                    .about("Handles the issues sub api.")
-                    .subcommand(SubCommand::with_name("create")
-                                .about("Creates new issue.")
-                                .arg(Arg::with_name("project-id")
-                                     .required(true))
-                                .arg(Arg::with_name("tracker-id")
-                                     .required(true))
-                                .arg(Arg::with_name("status-id")
-                                     .required(true))
-                                .arg(Arg::with_name("priority-id")
-                                     .required(true))
-                                .arg(Arg::with_name("subject")
-                                     .required(true))
-                                .arg(Arg::with_name("description")
-                                     .required(true))
-                                .arg(Arg::with_name("category-id")
-                                     .required(true))
-                                .arg(Arg::with_name("version-id")
-                                     .required(true))
-                                .arg(Arg::with_name("assigned-to-id")
-                                     .required(true))
-                                .arg(Arg::with_name("parent-issue-id")
-                                     .required(true))
-                                .arg(Arg::with_name("watcher-user-ids")
-                                     .required(true))
-                                .arg(Arg::with_name("is-private")
-                                     .required(true))
-                                .arg(Arg::with_name("estimated-hours")
-                                     .required(true))))
-        .subcommand(SubCommand::with_name("time_entries")
-                    .about("Handles the time entries sub api.")
-                    .subcommand(SubCommand::with_name("create")
-                                .about("Creates new time entry.")
-                                .arg(Arg::with_name("issue-id")
-                                     .required(true))
-                                .arg(Arg::with_name("hours")
-                                     .required(true))
-                                .arg(Arg::with_name("activity-id")
-                                     .required(true))
-                                .arg(Arg::with_name("comments")
-                                     .required(true))))
-        .get_matches();
+    let mut settings = Settings::new().unwrap();
+    let matches = arguments::get_matches();
 
     if let Some(h) = matches.value_of("host") {
         settings.host = Some(h.to_string());
     }
     if let Some(ak) = matches.value_of("apikey") {
         settings.apikey = Some(ak.to_string());
-    };
+    }
+
+    if settings.host.is_none() || settings.apikey.is_none() {
+        panic!("Please provide host and apikey");
+    }
 
     let redmine = RedmineApi::new(
         settings.host.unwrap(),
