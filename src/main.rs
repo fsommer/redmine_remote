@@ -1,7 +1,6 @@
 extern crate clap;
 extern crate config;
 extern crate redmine_api;
-extern crate serde;
 
 #[macro_use]
 extern crate serde_derive;
