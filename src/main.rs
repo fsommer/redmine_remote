@@ -17,7 +17,7 @@ use settings::Settings;
 
 quick_main!(run);
 
-fn run() -> Result<i32> {
+fn run() -> Result<()> {
     let settings = Settings::new()?;
     let args = args::get_matches();
 
@@ -25,19 +25,10 @@ fn run() -> Result<i32> {
     let redmine = RedmineApi::new(host, apikey);
 
     match args.subcommand() {
-        ("issues", Some(args)) => match args.subcommand() {
-            ("list", Some(args)) => { issues::list(&redmine, &args)?; },
-            ("create", Some(args)) => { issues::create(&redmine, &args)?; },
-            _ => println!("{}", args.usage()),
-        },
-        ("time_entries", Some(args)) => match args.subcommand() {
-            ("create", Some(args)) => { time_entries::create(&redmine, &args)?; },
-            _ => println!("{}", args.usage()),
-        },
-        _ => println!("{}", args.usage()),
-    };
-
-    Ok(0)
+        ("issues", Some(args)) => issues::handle(&redmine, &args),
+        ("time_entries", Some(args)) => time_entries::handle(&redmine, &args),
+        _ => Ok(println!("{}", args.usage())),
+    }
 }
 
 fn get_host_and_apikey(settings: &Settings, args: &ArgMatches) -> Result<(String, String)> {

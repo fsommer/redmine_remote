@@ -3,7 +3,14 @@ use errors::*;
 use redmine_api::RedmineApi;
 use redmine_api::time_entries::TimeEntry;
 
-pub fn create(redmine: &RedmineApi, args: &ArgMatches) -> Result<()> {
+pub fn handle(redmine: &RedmineApi, args: &ArgMatches) -> Result<()> {
+    match args.subcommand() {
+        ("create", Some(args)) => create(&redmine, &args),
+        _ => Ok(println!("{}", args.usage())),
+    }
+}
+
+fn create(redmine: &RedmineApi, args: &ArgMatches) -> Result<()> {
     let issue_id = args.value_of("issue-id").unwrap();
     let hours = args.value_of("hours").unwrap();
     let activity_id = args.value_of("activity-id").unwrap();

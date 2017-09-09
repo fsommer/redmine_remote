@@ -2,7 +2,15 @@ use clap::ArgMatches;
 use errors::*;
 use redmine_api::RedmineApi;
 
-pub fn list(redmine: &RedmineApi, args: &ArgMatches) -> Result<()> {
+pub fn handle(redmine: &RedmineApi, args: &ArgMatches) -> Result<()> {
+    match args.subcommand() {
+        ("list", Some(args)) => list(&redmine, &args),
+        ("create", Some(args)) => create(&redmine, &args),
+        _ => Ok(println!("{}", args.usage())),
+    }
+}
+
+fn list(redmine: &RedmineApi, args: &ArgMatches) -> Result<()> {
     let result = redmine.issues().list().execute()?;
     for i in result {
         println!("(#{}) {}", i.id, i.subject);
@@ -11,7 +19,7 @@ pub fn list(redmine: &RedmineApi, args: &ArgMatches) -> Result<()> {
     Ok(())
 }
 
-pub fn create(redmine: &RedmineApi, args: &ArgMatches) -> Result<()> {
+fn create(redmine: &RedmineApi, args: &ArgMatches) -> Result<()> {
     let mut watcher_user_ids = Vec::new();
     watcher_user_ids.push(args.value_of("watcher-user-ids").unwrap().parse::<u32>().unwrap());
 
