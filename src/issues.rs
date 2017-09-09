@@ -73,7 +73,7 @@ fn create(redmine: &RedmineApi, args: &ArgMatches) -> Result<()> {
     }
 
     match issue.execute() {
-        Ok(_) => println!("Issue successfully created."),
+        Ok(l) => println!("{}", l),
         _ => bail!("Can't create issue"),
     }
 
