@@ -7,6 +7,7 @@ pub fn list(redmine: &RedmineApi, arguments: &ArgMatches) -> Result<()> {
     for i in result {
         println!("(#{}) {}", i.id, i.subject);
     }
+
     Ok(())
 }
 
@@ -31,5 +32,6 @@ pub fn create(redmine: &RedmineApi, arguments: &ArgMatches) -> Result<()> {
         .estimated_hours(arguments.value_of("estimated-hours").unwrap().parse::<f32>().unwrap())
         .execute();
     println!("Result: {:?}", result);
+
     Ok(())
 }
