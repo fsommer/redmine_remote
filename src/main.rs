@@ -1,4 +1,5 @@
 extern crate clap;
+extern crate csv;
 extern crate config;
 #[macro_use]
 extern crate error_chain;

@@ -9,6 +9,7 @@ path = "src/main.rs"
 
 [dependencies]
 clap = "2"
+csv = "1.0.0-beta"
 config = "0.7"
 error-chain = "0.11"
 serde = "1.0"

@@ -1,9 +1,13 @@
 use clap::ArgMatches;
+use csv;
+use csv::DeserializeRecordsIter;
 use errors::*;
 use redmine_api::RedmineApi;
+use std::fs::File;
+use std::io::prelude::*;
 use structopt::StructOpt;
 
-#[derive(Debug, StructOpt)]
+#[derive(Debug, Deserialize, StructOpt)]
 struct Issue {
     project_id: Option<u32>,
     tracker_id: Option<u32>,
@@ -19,10 +23,91 @@ struct Issue {
     is_private: Option<bool>,
     estimated_hours: Option<f32>,
 }
+impl Issue {
+    pub fn merge(&mut self, issue: &Issue) -> &mut Self {
+        if let Some(id) = issue.project_id {
+            self.project_id = Some(id);
+        }
+
+        if let Some(id) = issue.tracker_id {
+            self.tracker_id = Some(id);
+        }
+
+        if let Some(id) = issue.status_id {
+            self.status_id = Some(id);
+        }
+
+        if let Some(id) = issue.priority_id {
+            self.priority_id = Some(id);
+        }
+
+        if let Some(ref s) = issue.subject {
+            self.subject = Some(s.to_string());
+        }
+
+        if let Some(ref d) = issue.description {
+            self.description = Some(d.to_string());
+        }
+
+        if let Some(id) = issue.category_id {
+            self.category_id = Some(id);
+        }
+
+        if let Some(id) = issue.version_id {
+            self.version_id = Some(id);
+        }
+
+        if let Some(id) = issue.assigned_to_id {
+            self.assigned_to_id = Some(id);
+        }
+
+        if let Some(id) = issue.parent_issue_id {
+            self.parent_issue_id = Some(id);
+        }
+
+        if let Some(ids) = issue.watcher_user_ids {
+            self.watcher_user_ids = Some(ids);
+        }
+
+        if let Some(p) = issue.is_private {
+            self.is_private = Some(p);
+        }
+
+        if let Some(h) = issue.estimated_hours {
+            self.estimated_hours = Some(h);
+        }
+
+        self
+    }
+}
 
 pub fn execute(redmine: &RedmineApi, clap: &ArgMatches) -> Result<()> {
-    let issue = Issue::from_clap(clap.clone());
+    let issue_args = Issue::from_clap(clap.clone());
 
+    if let Some(batch_file) = clap.value_of("batch_file") {
+        let mut file = File::open(batch_file)?;
+        let mut contents = String::new();
+        file.read_to_string(&mut contents)?;
+
+        let mut reader = csv::ReaderBuilder::new()
+            .delimiter(b';')
+            .from_reader(contents.as_bytes());
+
+        let iterator: DeserializeRecordsIter<&[u8], Issue> = reader.deserialize();
+        for line in iterator {
+            let mut issue = line?;
+            issue.merge(&issue_args);
+
+            create_single(redmine, issue)?;
+        }
+    } else {
+        return create_single(redmine, issue_args);
+    }
+
+    Ok(())
+}
+
+fn create_single(redmine: &RedmineApi, issue: Issue) -> Result<()> {
     if issue.project_id.is_none()
         || issue.tracker_id.is_none()
         || issue.status_id.is_none()
@@ -76,7 +161,7 @@ pub fn execute(redmine: &RedmineApi, clap: &ArgMatches) -> Result<()> {
 
     match i.execute() {
         Ok(l) => println!("{}", l),
-        _ => bail!("Can't create issue"),
+        Err(e) => println!("Error: {}", e),
     }
 
     Ok(())
