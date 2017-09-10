@@ -1,8 +1,13 @@
-#[macro_use] extern crate error_chain;
-#[macro_use] extern crate serde_derive;
 extern crate clap;
 extern crate config;
+#[macro_use]
+extern crate error_chain;
 extern crate redmine_api;
+#[macro_use]
+extern crate serde_derive;
+extern crate structopt;
+#[macro_use]
+extern crate structopt_derive;
 
 mod args;
 mod errors;

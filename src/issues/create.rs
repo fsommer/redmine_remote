@@ -1,61 +1,80 @@
 use clap::ArgMatches;
 use errors::*;
 use redmine_api::RedmineApi;
+use structopt::StructOpt;
 
-pub fn execute(redmine: &RedmineApi, args: &ArgMatches) -> Result<()> {
-    let project_id = args.value_of("set-project-id");
-    let tracker_id = args.value_of("set-tracker-id");
-    let status_id = args.value_of("set-status-id");
-    let priority_id = args.value_of("set-priority-id");
-    let subject = args.value_of("set-subject");
+#[derive(Debug, StructOpt)]
+struct Issue {
+    project_id: Option<u32>,
+    tracker_id: Option<u32>,
+    status_id : Option<u32>,
+    priority_id: Option<u32>,
+    subject: Option<String>,
+    description: Option<String>,
+    category_id: Option<u32>,
+    version_id: Option<u32>,
+    assigned_to_id: Option<u32>,
+    parent_issue_id: Option<u32>,
+    watcher_user_ids: Option<u32>,
+    is_private: Option<bool>,
+    estimated_hours: Option<f32>,
+}
 
-    if project_id.is_none() || tracker_id.is_none() || status_id.is_none() ||
-       priority_id.is_none() || subject.is_none() {
-        bail!("Please provide atleast project-id, tracker-id, status-id, priority-id and subject");
+pub fn execute(redmine: &RedmineApi, clap: &ArgMatches) -> Result<()> {
+    let issue = Issue::from_clap(clap.clone());
+
+    if issue.project_id.is_none()
+        || issue.tracker_id.is_none()
+        || issue.status_id.is_none()
+        || issue.priority_id.is_none()
+        || issue.subject.is_none() {
+        bail!("Please provide atleast project-id, tracker-id, status-id, \
+              priority-id and subject");
     }
 
-    let mut issue = redmine.issues().create(
-        project_id.unwrap().parse::<u32>()?,
-        tracker_id.unwrap().parse::<u32>()?,
-        status_id.unwrap().parse::<u32>()?,
-        priority_id.unwrap().parse::<u32>()?,
-        subject.unwrap());
+    let subject = issue.subject.unwrap();
+    let mut i = redmine.issues().create(
+        issue.project_id.unwrap(),
+        issue.tracker_id.unwrap(),
+        issue.status_id.unwrap(),
+        issue.priority_id.unwrap(),
+        &subject);
 
-    if let Some(d) = args.value_of("set-description") {
-        issue = issue.description(d);
+    if let Some(ref d) = issue.description {
+        i = i.description(d);
     }
 
-    if let Some(c) = args.value_of("set-category-id") {
-        issue = issue.category_id(c.parse::<u32>().chain_err(|| "category-id must be numeric")?);
+    if let Some(id) = issue.category_id {
+        i = i.category_id(id);
     }
 
-    if let Some(v) = args.value_of("set-version-id") {
-        issue = issue.fixed_version_id(v.parse::<u32>().chain_err(|| "version-id must be numeric")?);
+    if let Some(id) = issue.version_id {
+        i = i.fixed_version_id(id);
     }
 
-    if let Some(a) = args.value_of("set-assigned-to-id") {
-        issue = issue.assigned_to_id(a.parse::<u32>().chain_err(|| "assigned-to-id must be numeric")?);
+    if let Some(id) = issue.assigned_to_id {
+        i = i.assigned_to_id(id);
     }
 
-    if let Some(p) = args.value_of("set-parent-issue-id") {
-        issue = issue.parent_issue_id(p.parse::<u32>().chain_err(|| "parent-issue-id must be numeric")?);
+    if let Some(id) = issue.parent_issue_id {
+        i = i.parent_issue_id(id);
     }
 
-    if let Some(w) = args.value_of("set-watcher-user-ids") {
+    if let Some(ids) = issue.watcher_user_ids {
         let mut watcher_user_ids = Vec::new();
-        watcher_user_ids.push(w.parse::<u32>().chain_err(|| "watcher-user-ids must be numeric")?); // TODO: comma-spearated list
-        issue = issue.watcher_user_ids(watcher_user_ids);
+        watcher_user_ids.push(ids); // TODO: comma-spearated list
+        i = i.watcher_user_ids(watcher_user_ids);
     }
 
-    if let Some(p) = args.value_of("set-is-private") {
-        issue = issue.is_private(p.parse::<bool>().chain_err(|| "is-private must be boolean")?);
+    if let Some(p) = issue.is_private {
+        i = i.is_private(p);
     }
 
-    if let Some(eh) = args.value_of("set-estimated-hours") {
-        issue = issue.estimated_hours(eh.parse::<f32>().chain_err(|| "estimated-hours must be floating point number")?);
+    if let Some(h) = issue.estimated_hours {
+        i = i.estimated_hours(h);
     }
 
-    match issue.execute() {
+    match i.execute() {
         Ok(l) => println!("{}", l),
         _ => bail!("Can't create issue"),
     }
